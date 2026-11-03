@@ -31,6 +31,8 @@ claude code prefixes plugin commands and agents, so `/poteto-mode` is `/pstack:p
 
 claude code installs a generated copy of pstack, including this readme and the guide, from [`harness/pstack/`](https://github.com/cursor/plugins/tree/main/harness/pstack) at the repository root. after you change pstack, run `node scripts/generate-pstack-harness-trees.mjs` from the repository root and commit the result. ci fails while the generated copy is out of date.
 
+in codex, use the **PStack for Codex — cappeol fork** marketplace from [cappeol/plugins](https://github.com/cappeol/plugins). this adaptation preserves the upstream skills and adds a [codex adapter](https://github.com/cappeol/plugins/blob/main/pstack/docs/harness/codex.md). install instructions and rollback guidance are in the fork's root readme. codex loads a generated tree with no startup hooks; invoke poteto-mode explicitly or through your standing instruction. setup-pstack saves supported model choices in a bounded AGENTS.md block.
+
 ## get started
 
 two steps:
