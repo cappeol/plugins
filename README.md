@@ -1,6 +1,25 @@
-# Cursor plugins
+# PStack for Codex (cappeol fork)
 
-Official Cursor plugins for popular developer tools, frameworks, and SaaS products. Each plugin is a standalone directory at the repository root with its own `.cursor-plugin/plugin.json` manifest.
+This fork of [cursor/plugins](https://github.com/cursor/plugins) adds a generated Codex harness for [PStack](pstack/README.md), created by Lauren Tan. The upstream Cursor and Claude Code plugins remain available. The Codex adaptation is maintained in cappeol/plugins and is not an official Cursor or OpenAI release.
+
+## Install PStack in Codex
+
+With the Codex CLI, register this marketplace and install PStack:
+
+```sh
+codex plugin marketplace add cappeol/plugins --ref main
+codex plugin add pstack@pstack-codex
+```
+
+Alternatively clone [cappeol/plugins](https://github.com/cappeol/plugins), open the checkout as a trusted Codex project, then use the Plugins directory to install PStack from the `pstack-codex` marketplace. Its catalog is `.agents/plugins/marketplace.json`; its source is `harness/pstack/codex`. Follow the [official local marketplace instructions](https://developers.openai.com/plugins/build/plugins) for your client. The host installs a cached copy, so editing the checkout alone does not refresh an installed plugin.
+
+Invoke the installed poteto-mode skill explicitly, or keep your existing standing activation instruction. This version has no startup hooks. Run setup-pstack to select supported models and save them in a bounded AGENTS.md block. See the [Codex adapter](pstack/docs/harness/codex.md) for tool differences and capability limits.
+
+When replacing an older PStack fork, record its marketplace/plugin identity and installed revision first. Install and verify this fork in isolation, then disable the old plugin to avoid duplicate skills. Preserve the old source and your AGENTS.md settings until the replacement works. To roll back, disable this plugin and re-enable the recorded old installation; preserve unrelated marketplace entries and configuration. Do not delete an entire cache or overwrite user settings.
+
+The previous Denyer port provided 67 commands. This adapter provides the current upstream's 58 PStack skills plus three required cursor-team-kit dependencies (`deslop`, `control-cli`, and `control-ui`). It does not promise full command parity. The nine remaining old-only commands are `babysit`, `fix-ci`, `fix-merge-conflicts`, `get-pr-comments`, `make-pr-easy-to-review`, `thermo-nuclear-code-quality-review`, `thermo-nuclear-review`, `thermos`, and `what-did-i-get-done`. Some work now lives in upstream playbooks or cursor-team-kit rather than standalone PStack commands; these other cursor-team-kit skills are not bundled here. Existing `strongest judgment` model choices migrate to `hardest tasks` only when no canonical choice exists. Setup shows the migration before saving.
+
+For updates and verification, follow [Codex fork maintenance](docs/pstack-codex-maintenance.md).
 
 ## Plugins
 

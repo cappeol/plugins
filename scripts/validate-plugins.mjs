@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFileSync, existsSync } from "fs";
+import { readFileSync, existsSync, readdirSync, realpathSync } from "fs";
 import { resolve, dirname } from "path";
 import { fileURLToPath } from "url";
 import Ajv from "ajv";
@@ -114,6 +114,52 @@ for (const entry of claudeMarketplace.plugins ?? []) {
       `Plugin "${entry.name}": Claude marketplace name does not match .claude-plugin/plugin.json name "${pluginJson.name}"`
     );
   }
+}
+
+// Codex uses its own catalog shape, not the Cursor marketplace schema.
+const codexPath = resolve(root, ".agents/plugins/marketplace.json");
+try {
+  const codexMarketplace = loadJSON(codexPath);
+  if (codexMarketplace.name !== "pstack-codex" || !codexMarketplace.interface?.displayName ||
+      !Array.isArray(codexMarketplace.plugins) || codexMarketplace.plugins.length !== 1) {
+    throw new Error("expected named pstack-codex marketplace with displayName and one plugin");
+  }
+  const [entry] = codexMarketplace.plugins;
+  if (entry.name !== "pstack" || entry.source?.source !== "local" ||
+      entry.source.path !== "./harness/pstack/codex" ||
+      entry.policy?.installation !== "AVAILABLE" || entry.policy?.authentication !== "ON_INSTALL" ||
+      entry.category !== "Developer Tools") {
+    throw new Error("expected pstack local source ./harness/pstack/codex, AVAILABLE/ON_INSTALL, Developer Tools");
+  }
+  const pluginDir = resolve(root, entry.source.path);
+  if (!realpathSync(pluginDir).startsWith(`${realpathSync(root)}/`)) throw new Error("source escapes marketplace root");
+  const portable = loadJSON(resolve(pluginDir, "plugin.json"));
+  const overlay = loadJSON(resolve(pluginDir, ".codex-plugin/plugin.json"));
+  const upstream = loadJSON(resolve(root, "pstack/plugin.json"));
+  for (const [label, manifest] of [["portable", portable], ["compatibility", overlay]]) {
+    if (manifest.name !== entry.name || manifest.version !== upstream.version ||
+        JSON.stringify(manifest.author) !== JSON.stringify(upstream.author)) {
+      fail(`Codex ${label} identity, version or original author differs from pstack/plugin.json`);
+    }
+  }
+  const presentation = portable.extensions?.["com.openai"];
+  if (!presentation?.interface?.displayName?.includes("cappeol") ||
+      JSON.stringify(presentation.interface) !== JSON.stringify(overlay.interface)) {
+    fail("Codex presentation must identify the adaptation and match the compatibility overlay");
+  }
+  if (presentation?.hooks || overlay.hooks || existsSync(resolve(pluginDir, "hooks"))) fail("Codex first version must ship without hooks");
+  const sourceSkills = readdirSync(resolve(root, "pstack/skills"))
+    .filter((name) => existsSync(resolve(root, "pstack/skills", name, "SKILL.md")));
+  for (const name of [...sourceSkills, "deslop", "control-cli", "control-ui"]) {
+    if (!existsSync(resolve(pluginDir, "skills", name, "SKILL.md"))) fail(`Codex missing skill ${name}`);
+  }
+  const dependencyLicense = resolve(pluginDir, "docs/dependencies/cursor-team-kit-LICENSE");
+  if (!existsSync(dependencyLicense) ||
+      !readFileSync(dependencyLicense).equals(readFileSync(resolve(root, "cursor-team-kit/LICENSE")))) {
+    fail("Codex missing or changed cursor-team-kit license");
+  }
+} catch (error) {
+  fail(`Codex marketplace: ${error.message}`);
 }
 
 const manifestPaths = [
