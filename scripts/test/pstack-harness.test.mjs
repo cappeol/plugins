@@ -94,6 +94,12 @@ test("missing Cursor vocabulary mapping and invalid skill metadata fail before g
   writeFileSync(adapter, readFileSync(adapter, "utf8").replaceAll("AskQuestion", "removed-term"));
   bad(run(dir, generator), /Codex adapter has no row for `AskQuestion`/);
   cpSync(join(root, "pstack/docs/harness/codex.md"), adapter);
+  for (const target of ["codex", "claude-code"]) {
+    const path = join(dir, `pstack/docs/harness/${target}.md`);
+    writeFileSync(path, readFileSync(path, "utf8").replaceAll("gemini-", "removed-provider-"));
+    bad(run(dir, generator), new RegExp(`${target === "codex" ? "Codex" : "Claude Code"} adapter has no row for gemini-, used by .*arena`));
+    cpSync(join(root, `pstack/docs/harness/${target}.md`), path);
+  }
   const skill = join(dir, "pstack/skills/poteto-mode/SKILL.md");
   writeFileSync(skill, readFileSync(skill, "utf8").replace("name: poteto-mode", "name: wrong"));
   bad(run(dir, generator), /not its folder name/);
