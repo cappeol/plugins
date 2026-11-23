@@ -54,6 +54,8 @@ test("write regenerates both targets deterministically with source bytes and mod
     assert.deepEqual(manifest.author, canonical.author);
     const skill = readFileSync(join(base, "skills/poteto-mode/SKILL.md"), "utf8");
     assert.match(skill, new RegExp(`docs/harness/${target}\\.md`));
+    const worker = "skills/poteto-mode/worker.md";
+    assert.deepEqual(readFileSync(join(base, worker)), readFileSync(join(dir, "pstack", worker)), "child kickoff dependency must be bundled byte-for-byte");
     const script = "skills/statechart/scripts/statechart";
     assert.deepEqual(readFileSync(join(base, script)), readFileSync(join(dir, "pstack", script)));
     assert.equal(statSync(join(base, script)).mode & 0o111, statSync(join(dir, "pstack", script)).mode & 0o111);
